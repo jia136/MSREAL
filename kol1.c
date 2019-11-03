@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 int main(){
 
 	FILE *fp;
@@ -28,109 +29,112 @@ int main(){
 	int bvali = 0;
 
 	while(1){
-	//Citanje vrednosti tastera
-	fpb = fopen("/dev/button", "r");
-	if(fpb==NULL) {
-		puts("Problem pri otvaranju /dev/button");
-		return -1;
-	}
-	strb = (char *)malloc (num_of_bytesb+1);
-	getline(&strb, &num_of_bytesb, fpb);
-	if(fclose(fpb)){
-		puts("Problem pri zatvaranju /dev/button");
-		return -1;
-	}
-	bval0 = strb[5] - 48;
-	bvali = bval0 + 0;
-	free(strb);
-
-	if(bvali==1 && kk == 1){
-		cnt++;
-		kk = 0;
-		usleep(10);
-
-	}
-	else if(bvali==0){
-		kk = 1;
-	}
-
-	if(brojac%20000==0){
-		//Citanje vrednosti led
-		fp =fopen("/dev/led", "r");
-		if(fp==NULL) {
-			puts("Problem pri otvaranju /dev/led");
+		
+		//Citanje vrednosti tastera
+		fpb = fopen("/dev/button", "r");
+		if(fpb==NULL) {
+			puts("Problem pri otvaranju /dev/button");
 			return -1;
 		}
-		str = (char*)malloc(num_of_bytes+1);
-		getline(&str, &num_of_bytes, fp);
-		if(fclose(fp)){
-			puts("Problem pri zatvaranju /dev/led");
+		strb = (char *)malloc (num_of_bytesb+1);
+		getline(&strb, &num_of_bytesb, fpb);
+		if(fclose(fpb)){
+			puts("Problem pri zatvaranju /dev/button");
 			return -1;
 		}
-		lval1 = str[2] - 48;
-		lval2 = str[3] - 48;
-		lval3 = str[4] - 48;
-		lval4 = str[5] - 48;
-		free(str);
-		led_vr = lval1 * 8 + lval2 * 4 + lval3 * 2 + lval4;
-		printf("vrednost led:%d\n", led_vr);
+		bval0 = strb[5] - 48;
+		bvali = bval0 + 0;
+		free(strb);
+		
+		// odredjivanje operacije/soft diferenciranje
+		if(bvali==1 && kk == 1){
+			cnt++;
+			kk = 0;
+			usleep(10);
 
-		//Citanje vrednosti prekidaca
-		fps = fopen("/dev/switch", "r");
-		if(fps==NULL) {
-			puts("Problem pri otvaranju /dev/switch");
-		return -1;
 		}
-		strs = (char *)malloc (num_of_bytess+1);
-		getline(&strs, &num_of_bytess, fps);
-		if(fclose(fps)){
-			puts("Problem pri zatvaranju /dev/switch");
-		return -1;
-		}
-		sval1 = strs[2] - 48;
-		sval2 = strs[3] - 48;
-		sval3 = strs[4] - 48;
-		sval4 = strs[5] - 48;
-		free(strs);
-		sw_vr = sval2 * 4  + sval3 * 2  + sval4;
-		printf("vrednost prekidaca:%d\n", sw_vr);
-
-		//racunanje rezultata
-
-		if(sval1){
-			if(cnt%2){
-				rez = led_vr - sw_vr;
-			}
-			else{
-				rez = led_vr + sw_vr;
-			}
-			if(rez>15){
-				rez=15;
-			}
-			if(rez<0){
-				rez=0;
-			}
-			printf("rez posle sabiranja: %d\n", rez);
+		else if(bvali==0){
+			kk = 1;
 		}
 
-		// Upali diode
-		fp = fopen("/dev/led", "w");
-		if(fp == NULL){
-			printf("Problem pri otvaranju /dev/led\n");
+
+		if(brojac%20000==0){
+			//Citanje vrednosti led
+			fp =fopen("/dev/led", "r");
+			if(fp==NULL) {
+				puts("Problem pri otvaranju /dev/led");
+				return -1;
+			}
+			str = (char*)malloc(num_of_bytes+1);
+			getline(&str, &num_of_bytes, fp);
+			if(fclose(fp)){
+				puts("Problem pri zatvaranju /dev/led");
+				return -1;
+			}
+			lval1 = str[2] - 48;
+			lval2 = str[3] - 48;
+			lval3 = str[4] - 48;
+			lval4 = str[5] - 48;
+			free(str);
+			led_vr = lval1 * 8 + lval2 * 4 + lval3 * 2 + lval4;
+			printf("vrednost led:%d\n", led_vr);
+
+			//Citanje vrednosti prekidaca
+			fps = fopen("/dev/switch", "r");
+			if(fps==NULL) {
+				puts("Problem pri otvaranju /dev/switch");
 			return -1;
-		}
-
-		sprintf(rez_str,"%d",rez);
-		printf("%s\n",rez_str);
-
-		fputs(rez_str, fp);
-		if(fclose(fp)){
-			printf("Problem pri zatvaranju /dev/led\n");
+			}
+			strs = (char *)malloc (num_of_bytess+1);
+			getline(&strs, &num_of_bytess, fps);
+			if(fclose(fps)){
+				puts("Problem pri zatvaranju /dev/switch");
 			return -1;
-	}
-	//sleep(2);
-	}
-	brojac++;
+			}
+			sval1 = strs[2] - 48;
+			sval2 = strs[3] - 48;
+			sval3 = strs[4] - 48;
+			sval4 = strs[5] - 48;
+			free(strs);
+			sw_vr = sval2 * 4  + sval3 * 2  + sval4;
+			printf("vrednost prekidaca:%d\n", sw_vr);
+
+			//racunanje rezultata
+
+			if(sval1){
+				if(cnt%2){
+					rez = led_vr - sw_vr;
+				}
+				else{
+					rez = led_vr + sw_vr;
+				}
+				if(rez>15){
+					rez=15;
+				}
+				if(rez<0){
+					rez=0;
+				}
+				printf("rez posle sabiranja/oduzimanja: %d\n", rez);
+			}
+
+			// Upali diode
+			fp = fopen("/dev/led", "w");
+			if(fp == NULL){
+				printf("Problem pri otvaranju /dev/led\n");
+				return -1;
+			}
+
+			sprintf(rez_str,"%d",rez);
+			printf("%s\n",rez_str);
+
+			fputs(rez_str, fp);
+			if(fclose(fp)){
+				printf("Problem pri zatvaranju /dev/led\n");
+				return -1;
+			}
+		//sleep(2);
+		}
+		brojac++;
 	}
 	return 0;
 }
